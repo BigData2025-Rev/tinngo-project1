@@ -1,22 +1,23 @@
 from log import logger
-from model.user import User
+from model import User
 from util import get_connection
 
 class UserDAO:
     def __init__(self):
-        self.db_conn = get_connection('sql')
+        logger.info("Init UserDAO...")
+        self.db_conn = get_connection("sql")
         self.cursor = self.db_conn.cursor()
         self._create_user_table()
 
     def _create_user_table(self):
-        create_table_query = '''
+        create_table_query = """
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(50) NOT NULL,
                 password VARCHAR(50) NOT NULL,
                 is_admin TINYINT(1) NOT NULL CHECK (is_admin IN (0, 1)) DEFAULT 0
             )
-        '''
+        """
         self.cursor.execute(create_table_query)
         self.db_conn.commit()
 

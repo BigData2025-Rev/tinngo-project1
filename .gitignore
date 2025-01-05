@@ -9,6 +9,7 @@
 !dao/
 !dao/__init__.py
 !dao/user_dao.py
+!dao/book_dao.py
 
 !log/
 !log/__init__.py
@@ -17,6 +18,7 @@
 !model/
 !model/__init__.py
 !model/user.py
+!model/book.py
 
 !util/
 !util/__init__.py

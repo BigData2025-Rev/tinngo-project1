@@ -10,10 +10,10 @@ def get_input(prompt, options=None):
         print("Invalid choice. Please try again.")
 
 def clear_screen():
-    if os.name == 'nt':
-        os.system('cls')
+    if os.name == "nt":
+        os.system("cls")
     else:
-        os.system('clear')
+        os.system("clear")
 
 def print_header(text):
     width = 40
@@ -22,6 +22,6 @@ def print_header(text):
     left_pad = total_pad // 2
     right_pad = total_pad - left_pad
 
-    print(' ' * left_pad + text + ' ' * right_pad)
-    print('-' * width)
+    print(" " * left_pad + text + " " * right_pad)
+    print("-" * width)
     print()

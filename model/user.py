@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 @dataclass
 class User:
-    username: str = ''
+    username: str = ""
     is_admin: bool = False
 
     def __init__(self, username: str, is_admin: int):
