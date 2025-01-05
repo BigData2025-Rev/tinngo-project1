@@ -1,4 +1,5 @@
 from dao.user_dao import UserDAO
+from log import logger
 from util.utils import get_input, clear_screen, print_header
 
 class LibraryCLI:
@@ -7,6 +8,8 @@ class LibraryCLI:
         self.user = None
 
     def run(self):
+        logger.info("Program started...")
+
         curr_state = 'welcome'
         while True:
             clear_screen()
@@ -35,6 +38,8 @@ class LibraryCLI:
             else:
                 raise Exception(f"Unknown state: {curr_state}")
 
+        logger.info("Program ended.")
+
     def welcome(self):
         print_header("Welcome to the Library CLI App")
         print("[1] Log in")
@@ -43,7 +48,6 @@ class LibraryCLI:
 
         options = {'1': "login", "2": "register"}
         choice = get_input("> ", options=options.keys())
-        print(options[choice])
 
         return options[choice]
 
@@ -84,12 +88,16 @@ class LibraryCLI:
 
             if choice == "y":
                 return "login"
-            
+
             print()
 
     def close(self):
+        logger.info("Closing resources...")
+
         if self.user_dao:
             self.user_dao.close()
+
+        logger.info("Done closing resources.")
 
 if __name__ == "__main__":
     app = LibraryCLI()

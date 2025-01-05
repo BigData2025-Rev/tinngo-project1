@@ -10,6 +10,10 @@
 !dao/__init__.py
 !dao/user_dao.py
 
+!log/
+!log/__init__.py
+!log/logger.py
+
 !model/
 !model/__init__.py
 !model/user.py
