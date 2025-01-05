@@ -24,10 +24,8 @@ class UserDAO:
     def register(self, username, password):
         logger.info("Registering new user...")
 
-        check_exist_query = "SELECT * FROM users WHERE username = %s"
-        self.cursor.execute(check_exist_query, (username,))
-        existing_user = self.cursor.fetchone()
-        if existing_user:
+        exist = self._user_exist(username)
+        if exist:
             logger.info("Failed, username exists.")
             return False
 
@@ -52,6 +50,32 @@ class UserDAO:
         else:
             logger.info("Fail, invalid username/password.")
             return None
+
+    def grant_admin_access(self, username):
+        logger.info("Grantin admin access to %s...", username)
+
+        exist = self._user_exist(username)
+        if not exist:
+            logger.info("Failed, username not exists.")
+            return False
+
+        update_query = "UPDATE users SET is_admin = 1 WHERE username = %s"
+        self.cursor.execute(update_query, (username, ))
+        self.db_conn.commit()
+
+        return True
+
+    def _user_exist(self, username):
+        logger.info("Getting user %s...", username)
+
+        check_exist_query = "SELECT username FROM users WHERE username = %s"
+        self.cursor.execute(check_exist_query, (username,))
+        
+        if self.cursor.fetchone():
+            return True
+
+        return False
+        
 
     def close(self):
         if self.cursor:

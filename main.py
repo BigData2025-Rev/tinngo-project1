@@ -16,6 +16,7 @@ class LibraryCLI:
         while True:
             clear_screen()
             if curr_state == "welcome":
+                self.user: User = None
                 curr_state = self.welcome()
 
             elif curr_state == "login":
@@ -52,9 +53,10 @@ class LibraryCLI:
         print_header("Welcome To Library App")
         print("[1] Log in")
         print("[2] Create new account")
+        print("[3] Exit")
         print()
 
-        options = {"1": "login", "2": "register"}
+        options = {"1": "login", "2": "register", "3": "exit"}
         choice = get_input("> ", options=options.keys())
 
         return options[choice]
@@ -104,15 +106,17 @@ class LibraryCLI:
 
         print("[1] Add book")
         print("[2] Grant admin access")
+        print("[3] Log out")
         print()
 
-        options = {"1": "add book", "2": "grant admin"}
+        options = {"1": "add book", "2": "grant admin",  "3": "welcome"}
         choice = get_input("> ", options=options.keys())
 
         return options[choice]
 
     def add_book(self):
         print_header("Admin Dashboard: Add Book")
+
         while True:
             new_book = Book()
             new_book.isbn = int(input("ISBN: "))
@@ -127,8 +131,7 @@ class LibraryCLI:
             else:
                 print("\nFailed to add book to db.")
 
-            choice = get_input("Continue adding books? (y/n): ", options=["y", "n"])
-
+            choice = get_input("Continue? (y/n): ", options=["y", "n"])
             if choice == "n":
                 break
                 
@@ -138,9 +141,22 @@ class LibraryCLI:
 
     def grant_admin_access(self):
         print_header("Admin Dashboard: Grant Admin Access")
-        input()
 
-        return ""
+        while True:
+            username = input("Username: ")
+
+            success = self.user_dao.grant_admin_access(username)
+            if success:
+                print(f"Successfully grant {username} admin access.")
+            else:
+                print(f"Invalid username {username}. Please try again.")
+
+            choice = get_input("\nContinue? (y/n): ", options=["y", "n"])
+            if choice == "n":
+                break
+
+            print()
+        return "dashboard"
 
     def close(self):
         logger.info("Closing resources...")
