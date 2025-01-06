@@ -70,12 +70,11 @@ class UserDAO:
 
         check_exist_query = "SELECT username FROM users WHERE username = %s"
         self.cursor.execute(check_exist_query, (username,))
-        
+
         if self.cursor.fetchone():
             return True
 
         return False
-        
 
     def close(self):
         if self.cursor:

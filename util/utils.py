@@ -23,5 +23,5 @@ def print_header(text):
     right_pad = total_pad - left_pad
 
     print(" " * left_pad + text + " " * right_pad)
-    print("-" * width)
+    print("=" * width)
     print()

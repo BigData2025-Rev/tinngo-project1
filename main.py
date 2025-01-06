@@ -33,15 +33,21 @@ class LibraryCLI:
                 if self.user.is_admin:
                     curr_state = self.admin_dashboard()
                 else:
-                    print("Dashboard")
-                    input()
-                    break
+                    curr_state = self.user_dashboard()
 
             elif curr_state == "add book":
                 curr_state = self.add_book()
 
             elif curr_state == "grant admin":
                 curr_state = self.grant_admin_access()
+
+            elif curr_state == "view books":
+                if self.user.is_admin:
+                    print("E")
+                    input()
+                    break
+                else:
+                    curr_state = self.user_view_books()
 
             else:
                 print(f"Unknown state: {curr_state}")
@@ -119,7 +125,7 @@ class LibraryCLI:
 
         while True:
             new_book = Book()
-            new_book.isbn = int(input("ISBN: "))
+            new_book.isbn = input("ISBN: ")
             new_book.title = input("Title: ")
             new_book.author = input("Author: ")
             new_book.year = int(input("Year: "))
@@ -134,7 +140,7 @@ class LibraryCLI:
             choice = get_input("Continue? (y/n): ", options=["y", "n"])
             if choice == "n":
                 break
-                
+
             print()
 
         return "dashboard"
@@ -156,6 +162,60 @@ class LibraryCLI:
                 break
 
             print()
+        return "dashboard"
+
+    def user_dashboard(self):
+        print_header("Dashboard")
+
+        print("[1] View books")
+        print("[2] Log out")
+        print()
+
+        options = {"1": "view books", "2": "welcome"}
+        choice = get_input("> ", options=options.keys())
+
+        return options[choice]
+
+    def user_view_books(self):
+        page_size = 5
+        generator = self.book_dao.get_books_in_batches(page_size)
+        total = next(generator)
+        curr_page = 0
+
+        while True:
+            print_header("Dashboard: View Books")
+
+            books_data = generator.send(curr_page)
+            books = [Book(*data) for data in books_data]
+            for i, book in enumerate(books):
+                print(f"[{i+1}] '{book.title}' by {book.author}")
+
+            first = (curr_page * page_size) + 1
+            last = (curr_page * page_size) + len(books)
+            print(f"Showing {first}-{last} out of {total} books\n")
+
+            if last != total:
+                print("[>] Next page")
+            if first != 1:
+                print("[<] Previous page")
+            print()
+
+            user_input = get_input("> ", options=[">", "<", "1", "2", "3", "4", "5", "exit"])
+            if user_input == ">":
+                if  last != total:
+                    curr_page += 1
+            elif user_input == "<":
+                if first != 1:
+                    curr_page -= 1
+            elif user_input == "exit":
+                return "exit"
+            else:
+                i = int(user_input)
+                print(f"Choose {books[i-1].title}")
+                input()
+
+            clear_screen()
+
         return "dashboard"
 
     def close(self):

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Book:
-    isbn: int = 0
+    isbn: str = ""
     title: str = ""
     author: str = ""
     year: int = 0
