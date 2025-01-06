@@ -10,6 +10,7 @@
 !dao/__init__.py
 !dao/user_dao.py
 !dao/book_dao.py
+!dao/borrow_dao.py
 
 !log/
 !log/__init__.py

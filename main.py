@@ -1,12 +1,13 @@
-from dao import UserDAO, BookDAO
+from dao import UserDAO, BookDAO, BorrowDAO
 from log import logger
-from util.utils import get_input, clear_screen, print_header
+from util.utils import get_input, clear_screen, print_header, browse_books
 from model import User, Book
 
 class LibraryCLI:
     def __init__(self):
         self.user_dao = UserDAO()
         self.book_dao = BookDAO()
+        self.borrow_dao = BorrowDAO()
         self.user: User = None
 
     def run(self):
@@ -40,14 +41,12 @@ class LibraryCLI:
 
             elif curr_state == "grant admin":
                 curr_state = self.grant_admin_access()
+            
+            elif curr_state == "borrow books":
+                curr_state = self.user_borrow_books()
 
-            elif curr_state == "view books":
-                if self.user.is_admin:
-                    print("E")
-                    input()
-                    break
-                else:
-                    curr_state = self.user_view_books()
+            elif curr_state == "return books":
+                curr_state = self.user_return_books()
 
             else:
                 print(f"Unknown state: {curr_state}")
@@ -167,52 +166,88 @@ class LibraryCLI:
     def user_dashboard(self):
         print_header("Dashboard")
 
-        print("[1] View books")
-        print("[2] Log out")
+        print("[1] Borrow books")
+        print("[2] Return books")
+        print("[3] Log out")
         print()
 
-        options = {"1": "view books", "2": "welcome"}
+        options = {"1": "borrow books", "2": "return books", "3": "welcome"}
         choice = get_input("> ", options=options.keys())
 
         return options[choice]
 
-    def user_view_books(self):
-        page_size = 5
-        generator = self.book_dao.get_books_in_batches(page_size)
-        total = next(generator)
-        curr_page = 0
+    def user_borrow_books(self):
+        browse = browse_books(self.book_dao, "Borrow Books")
+        first, last = next(browse)
+        print("[D] Dashboard\n")
 
         while True:
-            print_header("Dashboard: View Books")
+            user_input = input("> ")
+            if user_input in [">", "<"]:
+                first, last = browse.send(user_input)
+                print("[D] Dashboard\n")
 
-            books_data = generator.send(curr_page)
-            books = [Book(*data) for data in books_data]
-            for i, book in enumerate(books):
-                print(f"[{i+1}] '{book.title}' by {book.author}")
-
-            first = (curr_page * page_size) + 1
-            last = (curr_page * page_size) + len(books)
-            print(f"Showing {first}-{last} out of {total} books\n")
-
-            if last != total:
-                print("[>] Next page")
-            if first != 1:
-                print("[<] Previous page")
-            print()
-
-            user_input = get_input("> ", options=[">", "<", "1", "2", "3", "4", "5", "exit"])
-            if user_input == ">":
-                if  last != total:
-                    curr_page += 1
-            elif user_input == "<":
-                if first != 1:
-                    curr_page -= 1
             elif user_input == "exit":
                 return "exit"
+            elif user_input.lower() == "d":
+                return "dashboard"
             else:
-                i = int(user_input)
-                print(f"Choose {books[i-1].title}")
-                input()
+                try:
+                    i = int(user_input)
+                    if i < first or i > last:
+                        raise ValueError
+
+                    book = browse.send(i)
+                    clear_screen()
+                    print_header("Book Information")
+                    print(book.detailed_info())
+
+                    borrow_choice = get_input("Borrow? (y/n): ", options=["y", "n"])
+                    if borrow_choice == "y":
+                        success = self.borrow_dao.borrow_book(book.isbn, self.user.username)
+                        if success:
+                            print("Successly borrowed book.")
+                        else:
+                            print("You already borrowed this book.")
+                        input()
+
+                    first, last = next(browse)
+                    print("[D] Dashboard\n")
+
+                except ValueError:
+                    print(f"Please enter a valid number in range {first}-{last}")
+
+    def user_return_books(self):
+        while True:
+            print_header("Return Books")
+
+            borrowed_books_data = self.borrow_dao.get_borrowed_books(self.user.username)
+
+            borrowed_books = [Book(*data) for data in borrowed_books_data]
+
+            for i, book in enumerate(borrowed_books):
+                print(f"[{i+1:02}] {book.info()}")
+
+            print("\n[D] Dashboard\n")
+
+            user_input = input("> ")
+            if user_input.lower() == "d":
+                return "dashboard"
+            else:
+                try:
+                    i = int(user_input)
+                    if i < 0 or i > len(borrowed_books):
+                        raise ValueError
+
+                    success = self.borrow_dao.return_book(borrowed_books[i-1].isbn, self.user.username)
+                    if success:
+                        print("Successly returned book.")
+                    else:
+                        print("Fail.")
+                    input()
+
+                except ValueError:
+                    print(f"Please enter a valid number in range {1:02}-{len(borrowed_books):02}")
 
             clear_screen()
 
@@ -225,6 +260,8 @@ class LibraryCLI:
             self.user_dao.close()
         if self.book_dao:
             self.book_dao.close()
+        if self.borrow_dao:
+            self.borrow_dao.close()
 
         logger.info("Done closing resources.")
 
