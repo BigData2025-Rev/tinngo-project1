@@ -1,13 +1,26 @@
-from dao import UserDAO, BookDAO, BorrowDAO
+import os
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
+
+from dao import UserDAO, BookDAO, BorrowDAO, MUserDAO, MBookDAO, MBorrowDAO
 from log import logger
 from util.utils import get_input, clear_screen, print_header, browse_books
 from model import User, Book
 
+
 class LibraryCLI:
     def __init__(self):
-        self.user_dao = UserDAO()
-        self.book_dao = BookDAO()
-        self.borrow_dao = BorrowDAO()
+        db_type = os.getenv("DB_TYPE")
+        if db_type == "mysql":
+            self.user_dao = UserDAO()
+            self.book_dao = BookDAO()
+            self.borrow_dao = BorrowDAO()
+        elif db_type == "mongodb":
+            self.user_dao = MUserDAO()
+            self.book_dao = MBookDAO()
+            self.borrow_dao = MBorrowDAO()
+
         self.user: User = None
 
     def run(self):
@@ -41,12 +54,12 @@ class LibraryCLI:
 
             elif curr_state == "grant admin":
                 curr_state = self.grant_admin_access()
-            
+
             elif curr_state == "borrow books":
-                curr_state = self.user_borrow_books()
+                curr_state = self.borrow_books()
 
             elif curr_state == "return books":
-                curr_state = self.user_return_books()
+                curr_state = self.return_books()
 
             else:
                 print(f"Unknown state: {curr_state}")
@@ -109,12 +122,14 @@ class LibraryCLI:
     def admin_dashboard(self):
         print_header("Admin Dashboard")
 
-        print("[1] Add book")
-        print("[2] Grant admin access")
-        print("[3] Log out")
+        print("[1] Borrow books")
+        print("[2] Return books")
+        print("[3] Add book")
+        print("[4] Grant admin access")
+        print("[5] Log out")
         print()
 
-        options = {"1": "add book", "2": "grant admin",  "3": "welcome"}
+        options = {"1": "borrow books", "2": "return books", "3": "add book", "4": "grant admin",  "5": "welcome"}
         choice = get_input("> ", options=options.keys())
 
         return options[choice]
@@ -176,7 +191,7 @@ class LibraryCLI:
 
         return options[choice]
 
-    def user_borrow_books(self):
+    def borrow_books(self):
         browse = browse_books(self.book_dao, "Borrow Books")
         first, last = next(browse)
         print("[D] Dashboard\n")
@@ -217,7 +232,7 @@ class LibraryCLI:
                 except ValueError:
                     print(f"Please enter a valid number in range {first}-{last}")
 
-    def user_return_books(self):
+    def return_books(self):
         while True:
             print_header("Return Books")
 

@@ -5,7 +5,7 @@ from util import get_connection
 class UserDAO:
     def __init__(self):
         logger.info("Init UserDAO...")
-        self.db_conn = get_connection("sql")
+        self.db_conn = get_connection("mysql")
         self.cursor = self.db_conn.cursor()
         self._create_user_table()
 
