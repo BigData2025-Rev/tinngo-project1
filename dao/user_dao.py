@@ -65,7 +65,7 @@ class UserDAO:
         return True
 
     def _user_exist(self, username):
-        logger.info("Getting user %s...", username)
+        logger.info("Check user %s exist...", username)
 
         check_exist_query = "SELECT username FROM users WHERE username = %s"
         self.cursor.execute(check_exist_query, (username,))

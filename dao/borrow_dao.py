@@ -26,30 +26,38 @@ class BorrowDAO:
         self.db_conn.commit()
 
     def borrow_book(self, book_isbn, username):
+        logger.info("User %s borrowing %s...", username, book_isbn)
+
         exist_query = "SELECT * FROM borrow WHERE book_isbn = %s AND username = %s AND return_date IS NULL"
         self.cursor.execute(exist_query, (book_isbn, username))
         exist = self.cursor.fetchone()
         if exist:
+            logger.info("Failed, already borrowed.")
             return False
 
         borrow_date = datetime.today().date()
         due_date = datetime.today().date() + timedelta(weeks=1)
         self.cursor.execute("INSERT INTO borrow (book_isbn, username, borrow_date, due_date) VALUES (%s, %s, %s, %s)", (book_isbn, username, borrow_date, due_date))
         self.db_conn.commit()
+        logger.info("Successfully borrowed.")
 
         return True
 
     def get_borrowed_books(self, username):
+        logger.info("Get list of borrowed books by user %s", username)
         exist_query = "SELECT books.* FROM books, borrow WHERE books.isbn = borrow.book_isbn AND borrow.username = %s AND borrow.return_date IS NULL"
         self.cursor.execute(exist_query, (username,))
         return self.cursor.fetchall()
 
     def return_book(self, book_isbn, username):
+        logger.info("User %s returning %s...", username, book_isbn)
+
         return_date = datetime.today().date()
         update_query = "UPDATE borrow SET return_date = %s WHERE book_isbn = %s AND username = %s AND return_date IS NULL"
         self.cursor.execute(update_query, (return_date, book_isbn, username))
         self.db_conn.commit()
 
+        logger.info("Successfully returned.")
         return True
 
     def close(self):

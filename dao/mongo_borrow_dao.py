@@ -11,8 +11,11 @@ class MBorrowDAO:
         self.collection = self.connection[db]["Borrow"]
 
     def borrow_book(self, book_isbn, username):
+        logger.info("User %s borrowing %s...", username, book_isbn)
+
         exist = self.collection.find_one({"book_isbn": book_isbn, "username": username})
         if exist:
+            logger.info("Failed, already borrowed.")
             return False
 
         borrow_date = datetime.today().date()
@@ -28,9 +31,12 @@ class MBorrowDAO:
             "return_date": None
         })
 
+        logger.info("Successfully borrowed.")
+
         return True
 
     def get_borrowed_books(self, username):
+        logger.info("Get list of borrowed books by user %s", username)
         pipeline = [
             {
                 "$lookup": {
@@ -67,6 +73,7 @@ class MBorrowDAO:
         return books_data
 
     def return_book(self, book_isbn, username):
+        logger.info("User %s returning %s...", username, book_isbn)
         return_date = datetime.today().date()
         return_date = datetime.combine(return_date, datetime.min.time())
 
@@ -74,6 +81,7 @@ class MBorrowDAO:
             {"book_isbn": book_isbn, "username": username},
             {"$set": {"return_date": return_date}}
         )
+        logger.info("Successfully returned.")
 
         return True
 

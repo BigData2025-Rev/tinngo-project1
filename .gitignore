@@ -15,6 +15,9 @@
 !dao/mongo_book_dao.py
 !dao/mongo_borrow_dao.py
 
+!data/
+!data/load_data.py
+
 !log/
 !log/__init__.py
 !log/logger.py

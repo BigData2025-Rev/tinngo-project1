@@ -1,4 +1,5 @@
 import os
+import sys
 from log import logger
 from .sql_connection import create_sql_connection
 from .mongo_connection import create_mongo_connection
@@ -18,5 +19,6 @@ def get_connection(connection_type="mysql"):
         return create_mongo_connection(mongo_host)
 
     else:
-        print(f"Unsupported connection type: {connection_type}")
-        return None
+        logger.exception("Unsupported connection type: %s", connection_type)
+        logger.info("Closing program.")
+        sys.exit(1)
