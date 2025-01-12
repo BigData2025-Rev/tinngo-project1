@@ -15,6 +15,7 @@
 !dao/mongo_user_dao.py
 !dao/mongo_book_dao.py
 !dao/mongo_borrow_dao.py
+!dao/mongo_review_dao.py
 
 !data/
 !data/load_data.py

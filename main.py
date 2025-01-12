@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
-from dao import UserDAO, BookDAO, BorrowDAO, ReviewDAO, MUserDAO, MBookDAO, MBorrowDAO
+from dao import UserDAO, BookDAO, BorrowDAO, ReviewDAO, MUserDAO, MBookDAO, MBorrowDAO, MReviewDAO
 from log import logger
 from util.utils import get_input, clear_screen, print_header, browse_books
 from model import User, Book, Review
@@ -22,6 +22,7 @@ class LibraryCLI:
             self.user_dao = MUserDAO()
             self.book_dao = MBookDAO()
             self.borrow_dao = MBorrowDAO()
+            self.review_dao = MReviewDAO()
 
         self.user: User = None
 
