@@ -11,6 +11,7 @@
 !dao/user_dao.py
 !dao/book_dao.py
 !dao/borrow_dao.py
+!dao/review_dao.py
 !dao/mongo_user_dao.py
 !dao/mongo_book_dao.py
 !dao/mongo_borrow_dao.py
@@ -26,6 +27,7 @@
 !model/__init__.py
 !model/user.py
 !model/book.py
+!model/review.py
 
 !util/
 !util/__init__.py

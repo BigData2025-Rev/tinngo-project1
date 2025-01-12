@@ -3,10 +3,10 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
-from dao import UserDAO, BookDAO, BorrowDAO, MUserDAO, MBookDAO, MBorrowDAO
+from dao import UserDAO, BookDAO, BorrowDAO, ReviewDAO, MUserDAO, MBookDAO, MBorrowDAO
 from log import logger
 from util.utils import get_input, clear_screen, print_header, browse_books
-from model import User, Book
+from model import User, Book, Review
 
 
 class LibraryCLI:
@@ -16,6 +16,8 @@ class LibraryCLI:
             self.user_dao = UserDAO()
             self.book_dao = BookDAO()
             self.borrow_dao = BorrowDAO()
+            self.review_dao = ReviewDAO()
+
         elif db_type == "mongodb":
             self.user_dao = MUserDAO()
             self.book_dao = MBookDAO()
@@ -60,6 +62,12 @@ class LibraryCLI:
 
             elif curr_state == "return books":
                 curr_state = self.return_books()
+
+            elif curr_state == "review books":
+                curr_state = self.review_books()
+
+            elif curr_state == "remove review":
+                curr_state = self.remove_review()
 
             else:
                 print(f"Unknown state: {curr_state}")
@@ -124,12 +132,22 @@ class LibraryCLI:
 
         print("[1] Borrow books")
         print("[2] Return books")
-        print("[3] Add book")
-        print("[4] Grant admin access")
-        print("[5] Log out")
+        print("[3] Review books")
+        print("[4] Add book")
+        print("[5] Remove review")
+        print("[6] Grant admin access")
+        print("[7] Log out")
         print()
 
-        options = {"1": "borrow books", "2": "return books", "3": "add book", "4": "grant admin",  "5": "welcome"}
+        options = {
+            "1": "borrow books",
+            "2": "return books",
+            "3": "review books",
+            "4": "add book",
+            "5": "remove review",
+            "6": "grant admin",
+            "7": "welcome"
+        }
         choice = get_input("> ", options=options.keys())
 
         return options[choice]
@@ -183,10 +201,16 @@ class LibraryCLI:
 
         print("[1] Borrow books")
         print("[2] Return books")
-        print("[3] Log out")
+        print("[3] Review books")
+        print("[4] Log out")
         print()
 
-        options = {"1": "borrow books", "2": "return books", "3": "welcome"}
+        options = {
+            "1": "borrow books",
+            "2": "return books",
+            "3": "review books",
+            "4": "welcome"
+        }
         choice = get_input("> ", options=options.keys())
 
         return options[choice]
@@ -224,7 +248,7 @@ class LibraryCLI:
                             print("Successly borrowed book.")
                         else:
                             print("You already borrowed this book.")
-                        input()
+                        input("Press any key to continue...")
 
                     first, last = next(browse)
                     print("[D] Dashboard\n")
@@ -259,7 +283,7 @@ class LibraryCLI:
                         print("Successly returned book.")
                     else:
                         print("Fail.")
-                    input()
+                    input("Press any key to continue...")
 
                 except ValueError:
                     print(f"Please enter a valid number in range {1:02}-{len(borrowed_books):02}")
@@ -267,6 +291,113 @@ class LibraryCLI:
             clear_screen()
 
         return "dashboard"
+
+    def review_books(self):
+        browse = browse_books(self.book_dao, "Review Books")
+        first, last = next(browse)
+        print("[D] Dashboard\n")
+
+        while True:
+            user_input = input("> ")
+            if user_input in [">", "<"]:
+                first, last = browse.send(user_input)
+                print("[D] Dashboard\n")
+
+            elif user_input == "exit":
+                return "exit"
+            elif user_input.lower() == "d":
+                return "dashboard"
+            else:
+                try:
+                    i = int(user_input)
+                    if i < first or i > last:
+                        raise ValueError
+
+                    book = browse.send(i)
+                    clear_screen()
+                    print_header("Book Information")
+                    print(book.detailed_info())
+
+                    reviews = self.review_dao.get_reviews(book.isbn)
+                    if len(reviews) == 0:
+                        print("No reviews yet.")
+                    else:
+                        for r in reviews:
+                            print(Review(*r))
+
+                    print()
+
+                    review_choice = get_input("Write a review? (y/n): ", options=["y", "n"])
+                    if review_choice == "y":
+                        print()
+
+                        new_review = Review()
+                        new_review.book_isbn = book.isbn
+                        new_review.username = self.user.username
+                        new_review.rating = int(get_input("Rating (1-5): ", options=["1", "2", "3", "4", "5"]))
+                        new_review.content = input("Content: ")
+
+                        success = self.review_dao.add_review(new_review)
+                        if success:
+                            print("Successly added review.")
+                        else:
+                            print("Fail to add review.")
+                        input("Press any key to continue...")
+
+                    first, last = next(browse)
+                    print("[D] Dashboard\n")
+
+                except ValueError:
+                    print(f"Please enter a valid number in range {first}-{last}")
+
+    def remove_review(self):
+        browse = browse_books(self.book_dao, "Delete Review")
+        first, last = next(browse)
+        print("[D] Dashboard\n")
+
+        while True:
+            user_input = input("> ")
+            if user_input in [">", "<"]:
+                first, last = browse.send(user_input)
+                print("[D] Dashboard\n")
+
+            elif user_input == "exit":
+                return "exit"
+            elif user_input.lower() == "d":
+                return "dashboard"
+            else:
+                try:
+                    i = int(user_input)
+                    if i < first or i > last:
+                        raise ValueError
+
+                    book = browse.send(i)
+                    clear_screen()
+                    print_header("Book Information")
+                    print(book.detailed_info())
+
+                    reviews = self.review_dao.get_reviews(book.isbn)
+                    if len(reviews) == 0:
+                        print("No reviews yet.")
+                    else:
+                        for r in reviews:
+                            print(Review(*r))
+
+                    print()
+                    
+                    username = input("Delete review of user: ")
+                    success = self.review_dao.remove_review(book.isbn, username)
+                    if success:
+                        print("Successly remove review.")
+                    else:
+                        print("Fail to remove review.")
+                    input("Press any key to continue...")
+
+                    first, last = next(browse)
+                    print("[D] Dashboard\n")
+
+                except ValueError:
+                    print(f"Please enter a valid number in range {first}-{last}")
 
     def close(self):
         logger.info("Closing resources...")
@@ -277,6 +408,8 @@ class LibraryCLI:
             self.book_dao.close()
         if self.borrow_dao:
             self.borrow_dao.close()
+        if self.review_dao:
+            self.review_dao.close()
 
         logger.info("Done closing resources.")
 
